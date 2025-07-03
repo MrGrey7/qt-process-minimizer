@@ -1,0 +1,39 @@
+# Qt build artifacts
+build*/
+*.o
+*.obj
+*.dll
+*.exe
+*.app
+*.user
+*.user.*
+*.pro.user
+Makefile*
+*.moc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
+# Qt Creator junk
+*.autosave
+*.creator.*
+*.directory
+*.qmlproject.user
+
+# Windeployqt output
+/platforms/
+/translations/
+/plugins/
+/libs/
+
+# CMake
+CMakeLists.txt.user
+CMakeFiles/
+cmake-build*/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
