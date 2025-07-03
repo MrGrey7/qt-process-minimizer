@@ -1,6 +1,6 @@
 # Process Minimizer
 
-A Qt-based Windows app that allows you to register global hotkeys to minimize or restore specified processes. Perfect for privacy or as a custom panic button.
+A portable Qt-based Windows app that allows you to register global hotkeys to minimize or restore specified processes. Perfect for privacy or as a custom panic button.
 
 ## Features
 
