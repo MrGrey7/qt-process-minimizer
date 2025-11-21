@@ -40,3 +40,6 @@ Thumbs.db
 
 #Old qmake .pro/.pri
 *.old
+
+# Deploy Artifacts
+dist/*

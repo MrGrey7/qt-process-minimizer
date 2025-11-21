@@ -17,22 +17,23 @@ public:
     explicit ProcessPickerDialog(QWidget *parent = nullptr);
     ~ProcessPickerDialog();
 
-signals:
-    void processSelected(const QString &processName);
+    // The "Pull" accessor
+    QString selectedProcess() const;
 
 private slots:
     void on_listView_doubleClicked(const QModelIndex &index);
     void on_btnOk_clicked();
-
     void on_btnCancel_clicked();
 
 private:
     Ui::ProcessPickerDialog *ui;
     QStandardItemModel* model;
 
+    // Internal state to store selection
+    QString m_selectedProcess;
+
     void populateProcessList();
     QString getProcessNameAt(int row) const;
 };
-
 
 #endif // PROCESSPICKERDIALOG_H

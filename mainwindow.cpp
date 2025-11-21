@@ -12,40 +12,8 @@
 #include <QTimer>
 #include "ProcessPickerDialog.h"
 #include "win32utils.h"
+#include "utils.h"
 // #pragma comment(lib, "Psapi.lib")
-
-DWORD qtKeyToWinVK(int key) {
-    // Strip modifiers first
-    key &= ~Qt::KeyboardModifierMask;
-
-    // 1. Handle A-Z, 0-9 (They map 1:1)
-    if ((key >= Qt::Key_A && key <= Qt::Key_Z) || (key >= Qt::Key_0 && key <= Qt::Key_9)) {
-        return key;
-    }
-
-    // 2. Handle Special Keys (Mapping needed)
-    switch (key) {
-    case Qt::Key_F1: return VK_F1;
-    case Qt::Key_F2: return VK_F2;
-    case Qt::Key_F3: return VK_F3;
-    case Qt::Key_F4: return VK_F4;
-    case Qt::Key_F5: return VK_F5;
-    case Qt::Key_F6: return VK_F6;
-    case Qt::Key_F7: return VK_F7;
-    case Qt::Key_F8: return VK_F8;
-    case Qt::Key_F9: return VK_F9;
-    case Qt::Key_F10: return VK_F10;
-    case Qt::Key_F11: return VK_F11;
-    case Qt::Key_F12: return VK_F12;
-    case Qt::Key_Escape: return VK_ESCAPE;
-    case Qt::Key_Delete: return VK_DELETE;
-    case Qt::Key_Space:  return VK_SPACE;
-    case Qt::Key_Backspace: return VK_BACK;
-    case Qt::Key_Tab: return VK_TAB;
-    }
-
-    return 0; // Unsupported key
-}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -318,33 +286,41 @@ void MainWindow::saveSettings() {
 
 bool addToStartup() {
     wchar_t exePath[MAX_PATH];
-    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) == 0) return false;
 
-    HKEY hKey;
+    HKEY rawKey = nullptr;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER,
                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-                                0, KEY_WRITE, &hKey);
+                                0, KEY_WRITE, &rawKey);
+
     if (result != ERROR_SUCCESS) return false;
+
+    // RAII: Key automatically closes when this scope ends (even if RegSetValueExW throws/fails)
+    ScopedRegistryKey hKey(rawKey);
 
     std::wstring value = std::wstring(L"\"") + exePath + L"\" --minimized";
 
-    result = RegSetValueExW(hKey, L"MinimizerApp", 0, REG_SZ,
+    result = RegSetValueExW(hKey.get(), L"MinimizerApp", 0, REG_SZ,
                             reinterpret_cast<const BYTE*>(value.c_str()),
                             (value.size() + 1) * sizeof(wchar_t));
-    RegCloseKey(hKey);
+
     qDebug("Added to startup.");
     return (result == ERROR_SUCCESS);
 }
 
 bool removeFromStartup() {
-    HKEY hKey;
+    HKEY rawKey = nullptr;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER,
                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-                                0, KEY_WRITE, &hKey);
+                                0, KEY_WRITE, &rawKey);
+
     if (result != ERROR_SUCCESS) return false;
 
-    result = RegDeleteValueW(hKey, L"MinimizerApp");
-    RegCloseKey(hKey);
+    // RAII Wrapper
+    ScopedRegistryKey hKey(rawKey);
+
+    result = RegDeleteValueW(hKey.get(), L"MinimizerApp");
+
     qDebug("Removed from startup");
     return (result == ERROR_SUCCESS);
 }
@@ -387,14 +363,8 @@ void MainWindow::on_btnAddProcess_clicked()
 void MainWindow::on_btnSelectProcess_clicked()
 {
     ProcessPickerDialog dlg(this);
-    connect(&dlg, &ProcessPickerDialog::processSelected, this, [&](const QString &procName) {
-        ui->lineEditProcess->setText(procName);
-    });
-    dlg.exec();
-    // ProcessPickerDialog dlg(this);
-    // if (dlg.exec() == QDialog::Accepted) {
-    //     // Add a getter to your dialog: QString selectedProcess() const;
-    //     ui->lineEditProcess->setText(dlg.selectedProcess());
-    // }
+    if (dlg.exec() == QDialog::Accepted) {
+        ui->lineEditProcess->setText(dlg.selectedProcess());
+    }
 }
 
