@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include "ProcessPickerDialog.h"
+#include "win32utils.h"
 // #pragma comment(lib, "Psapi.lib")
 
 DWORD qtKeyToWinVK(int key) {

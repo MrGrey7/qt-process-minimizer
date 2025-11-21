@@ -17,7 +17,8 @@ SOURCES += \
 HEADERS += \
     hotkeyeventfilter.h \
     mainwindow.h \
-    processpickerdialog.h
+    processpickerdialog.h \
+    win32utils.h
 
 FORMS += \
     mainwindow.ui \

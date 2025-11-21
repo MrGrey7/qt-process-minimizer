@@ -9,19 +9,11 @@
 #include <QPixmap>
 #include <QMessageBox>
 #include <commctrl.h>
+#include <win32utils.h>
 
 // #pragma comment(lib, "Shlwapi.lib")
 // #pragma comment(lib, "Shell32.lib")
 // #pragma comment(lib, "comctl32.lib")
-
-struct HandleDeleter {
-    void operator()(HANDLE h) const {
-        if (h && h != INVALID_HANDLE_VALUE)
-            CloseHandle(h);
-    }
-};
-using ScopedHandle = std::unique_ptr<void, HandleDeleter>;
-
 
 ProcessPickerDialog::ProcessPickerDialog(QWidget *parent) :
     QDialog(parent),
