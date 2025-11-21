@@ -270,7 +270,7 @@ void MainWindow::minimizeProcessWindows() {
     auto hwnds = getProcessWindows(processNames);
 
     for (HWND hwnd : hwnds) {
-        ShowWindow(hwnd, SW_MINIMIZE);
+        ShowWindowAsync(hwnd, SW_MINIMIZE);
     }
 }
 
@@ -283,7 +283,7 @@ void MainWindow::maximizeProcessWindows() {
     auto hwnds = getProcessWindows(processNames);
 
     for (HWND hwnd : hwnds) {
-        ShowWindow(hwnd, SW_RESTORE);
+        ShowWindowAsync(hwnd, SW_RESTORE);
     }
 }
 
