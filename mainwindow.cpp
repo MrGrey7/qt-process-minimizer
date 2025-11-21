@@ -114,17 +114,24 @@ void MainWindow::registerHotkeys() {
         return;
     }
 
-    UINT minMod, minVk, maxMod, maxVk;
+    UINT minMod = 0, minVk = 0, maxMod = 0, maxVk = 0;
+
     auto extract = [](const QKeySequence &seq, UINT &mod, UINT &vk) {
-        int key = seq[0];
         mod = 0;
+        vk = 0;
+        if (seq.isEmpty()) return;
 
-        if (key & Qt::CTRL) mod |= MOD_CONTROL;
-        if (key & Qt::ALT)  mod |= MOD_ALT;
-        if (key & Qt::SHIFT) mod |= MOD_SHIFT;
-        if (key & Qt::META) mod |= MOD_WIN;
+        QKeyCombination combination = seq[0];
 
-        vk = qtKeyToWinVK(key);
+        Qt::KeyboardModifiers qMods = combination.keyboardModifiers();
+        if (qMods & Qt::ControlModifier) mod |= MOD_CONTROL;
+        if (qMods & Qt::AltModifier)     mod |= MOD_ALT;
+        if (qMods & Qt::ShiftModifier)   mod |= MOD_SHIFT;
+        if (qMods & Qt::MetaModifier)    mod |= MOD_WIN;
+
+        Qt::Key qKey = combination.key();
+
+        vk = qtKeyToWinVK(qKey);
     };
 
     extract(minimizeKey, minMod, minVk);
