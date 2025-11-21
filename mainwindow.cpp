@@ -93,6 +93,7 @@ void MainWindow::changeEvent(QEvent* event) {
 
 MainWindow::~MainWindow()
 {
+    qApp->removeNativeEventFilter(&hotkeyFilter);
     GlobalDeleteAtom(minimizeHotkeyId);
     GlobalDeleteAtom(maximizeHotkeyId);
     if (trayIcon) {
