@@ -37,3 +37,6 @@ cmake-build*/
 # OS
 .DS_Store
 Thumbs.db
+
+#Old qmake .pro/.pri
+*.old

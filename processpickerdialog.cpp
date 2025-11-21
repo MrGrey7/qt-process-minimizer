@@ -9,7 +9,7 @@
 #include <QPixmap>
 #include <QMessageBox>
 #include <commctrl.h>
-#include <win32utils.h>
+#include "win32utils.h"
 
 // #pragma comment(lib, "Shlwapi.lib")
 // #pragma comment(lib, "Shell32.lib")
