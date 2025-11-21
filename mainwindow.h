@@ -34,6 +34,8 @@ private:
     QKeySequence minimizeKey;
     QKeySequence maximizeKey;
     HotkeyEventFilter hotkeyFilter;
+    int minimizeHotkeyId;
+    int maximizeHotkeyId;
 
     void createTrayIcon();
     void closeEvent(QCloseEvent *event) override;

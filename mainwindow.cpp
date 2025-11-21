@@ -56,11 +56,14 @@ MainWindow::MainWindow(QWidget *parent)
     // Create and install native hotkey filter
     qApp->installNativeEventFilter(&hotkeyFilter);
 
+    minimizeHotkeyId = GlobalAddAtom(L"MrGrey_Minimizer_Min_Key");
+    maximizeHotkeyId = GlobalAddAtom(L"MrGrey_Minimizer_Max_Key");
+
     hotkeyFilter.onHotkeyPressed = [this](int id) {
-        if (id == 1) {
+        if (id == minimizeHotkeyId) {
             qDebug() << "Minimize hotkey triggered!";
             minimizeProcessWindows();
-        } else if (id == 2) {
+        } else if (id == maximizeHotkeyId) {
             qDebug() << "Maximize hotkey triggered!";
             maximizeProcessWindows();
         }
@@ -90,12 +93,14 @@ void MainWindow::changeEvent(QEvent* event) {
 
 MainWindow::~MainWindow()
 {
+    GlobalDeleteAtom(minimizeHotkeyId);
+    GlobalDeleteAtom(maximizeHotkeyId);
     delete ui;
 }
 
 void MainWindow::registerHotkeys() {
-    UnregisterHotKey(nullptr, 1);
-    UnregisterHotKey(nullptr, 2);
+    UnregisterHotKey(nullptr, minimizeHotkeyId);
+    UnregisterHotKey(nullptr, maximizeHotkeyId);
 
     minimizeKey = ui->hotkeyMinimize->keySequence();
     maximizeKey = ui->hotkeyMaximize->keySequence();
@@ -121,14 +126,15 @@ void MainWindow::registerHotkeys() {
     extract(minimizeKey, minMod, minVk);
     extract(maximizeKey, maxMod, maxVk);
 
-    bool minRegistered = RegisterHotKey(nullptr, 1, minMod, minVk);
+    bool minRegistered = RegisterHotKey(nullptr, minimizeHotkeyId, minMod, minVk);
     if (!minRegistered) {
         QMessageBox::warning(this, "Hotkey Registration Failed",
                              "Minimize hotkey is already in use by another app or invalid.");
         return;
     }
 
-    bool maxRegistered = RegisterHotKey(nullptr, 2, maxMod, maxVk);
+
+    bool maxRegistered = RegisterHotKey(nullptr, maximizeHotkeyId, maxMod, maxVk);
     if (!maxRegistered) {
         QMessageBox::warning(this, "Hotkey Registration Failed",
                              "Maximize hotkey is already in use or invalid.");
@@ -359,5 +365,10 @@ void MainWindow::on_btnSelectProcess_clicked()
         ui->lineEditProcess->setText(procName);
     });
     dlg.exec();
+    // ProcessPickerDialog dlg(this);
+    // if (dlg.exec() == QDialog::Accepted) {
+    //     // Add a getter to your dialog: QString selectedProcess() const;
+    //     ui->lineEditProcess->setText(dlg.selectedProcess());
+    // }
 }
 
