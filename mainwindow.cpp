@@ -197,46 +197,60 @@ struct WindowSearchContext {
 
 
 std::vector<HWND> getProcessWindows(const QStringList& processNames) {
-    WindowSearchContext context;
+    // 1. Optimization: Use a Set for O(1) lookup
+    std::unordered_set<DWORD> targetPids;
 
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (snapshot == INVALID_HANDLE_VALUE)
-        return {};
+    // 2. Optimization: Convert target names to lowercase ONCE, not every loop
+    QSet<QString> targetsLower;
+    for (const auto& name : processNames) targetsLower.insert(name.toLower());
 
-    PROCESSENTRY32 pe;
-    pe.dwSize = sizeof(PROCESSENTRY32);
+    // --- Phase 1: Get PIDs (The Snapshot) ---
+    ScopedHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    if (snapshot.get() != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe;
+        pe.dwSize = sizeof(PROCESSENTRY32);
 
-    if (Process32First(snapshot, &pe)) {
-        do {
-            QString exe = QString::fromWCharArray(pe.szExeFile);
-            for (const QString& targetName : processNames) {
-                if (exe.compare(targetName, Qt::CaseInsensitive) == 0) {
-                    context.pids.push_back(pe.th32ProcessID);
-                    break;
+        if (Process32First(snapshot.get(), &pe)) {
+            do {
+                // Fast comparison using QSet lookup
+                QString exeName = QString::fromWCharArray(pe.szExeFile).toLower();
+                if (targetsLower.contains(exeName)) {
+                    targetPids.insert(pe.th32ProcessID);
                 }
-            }
-        } while (Process32Next(snapshot, &pe));
+            } while (Process32Next(snapshot.get(), &pe));
+        }
     }
 
-    CloseHandle(snapshot);
+    // Early exit if no processes found (saves walking windows)
+    if (targetPids.empty()) return {};
 
-    // Now find windows that belong to those PIDs
+    // --- Phase 2: Get Windows (The Lightweight Walk) ---
+    struct Context {
+        const std::unordered_set<DWORD>* pids;
+        std::vector<HWND> hwnds;
+    };
+    Context ctx { &targetPids, {} };
+
     EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-        auto* ctx = reinterpret_cast<WindowSearchContext*>(lParam);
+        auto* c = reinterpret_cast<Context*>(lParam);
+
+        // Filter 1: Visibility (Fastest check)
+        if (!IsWindowVisible(hwnd)) return TRUE;
+
+        // Filter 2: PID Check (O(1) Set Lookup)
         DWORD pid;
         GetWindowThreadProcessId(hwnd, &pid);
 
-        if (std::find(ctx->pids.begin(), ctx->pids.end(), pid) != ctx->pids.end()) {
-            if (IsWindowVisible(hwnd) && GetWindow(hwnd, GW_OWNER) == nullptr) {
-                ctx->hwnds.push_back(hwnd);
+        if (c->pids->count(pid)) {
+            // Filter 3: Ownership (Prevent minimizing tooltips/popups)
+            if (GetWindow(hwnd, GW_OWNER) == nullptr) {
+                c->hwnds.push_back(hwnd);
             }
         }
         return TRUE;
-    }, reinterpret_cast<LPARAM>(&context));
+    }, reinterpret_cast<LPARAM>(&ctx));
 
-    qDebug() << "Found windows:" << context.hwnds.size();
-
-    return context.hwnds;
+    return ctx.hwnds;
 }
 
 
