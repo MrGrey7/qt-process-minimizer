@@ -95,6 +95,10 @@ MainWindow::~MainWindow()
 {
     GlobalDeleteAtom(minimizeHotkeyId);
     GlobalDeleteAtom(maximizeHotkeyId);
+    if (trayIcon) {
+        trayIcon->hide(); // Forces Windows to remove the icon immediately
+        delete trayIcon;
+    }
     delete ui;
 }
 
