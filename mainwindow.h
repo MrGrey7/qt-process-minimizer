@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include "hotkeyeventfilter.h"
+
 // #include <QHotkey>  // Qt doesn't support global hotkeys by default, we’ll fix that soon
 
 QT_BEGIN_NAMESPACE
@@ -31,6 +33,7 @@ private:
     QString targetProcess;
     QKeySequence minimizeKey;
     QKeySequence maximizeKey;
+    HotkeyEventFilter hotkeyFilter;
 
     void createTrayIcon();
     void closeEvent(QCloseEvent *event) override;

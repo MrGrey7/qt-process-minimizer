@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <QAbstractNativeEventFilter>
 #include <QDebug>
-#include "hotkeyeventfilter.h"
 #include <TlHelp32.h>   // For process snapshot
 #include <Psapi.h>      // For GetModuleBaseName
 #include <QCloseEvent>
@@ -22,10 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // Create and install native hotkey filter
-    auto *hotkeyFilter = new HotkeyEventFilter();
-    qApp->installNativeEventFilter(hotkeyFilter);
+    qApp->installNativeEventFilter(&hotkeyFilter);
 
-    hotkeyFilter->onHotkeyPressed = [this](int id) {
+    hotkeyFilter.onHotkeyPressed = [this](int id) {
         if (id == 1) {
             qDebug() << "Minimize hotkey triggered!";
             minimizeProcessWindows();
