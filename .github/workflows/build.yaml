@@ -1,0 +1,79 @@
+name: Minimizer CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-windows:
+    name: Windows (MinGW)
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        qt_ver: ['6.9.0']
+        qt_arch: ['win64_mingw']
+        tools: ['tools_mingw1310']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Clean Path (Windows)
+        run: |
+          Remove-Item -Path "C:\mingw64" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "C:\Strawberry" -Recurse -Force -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ matrix.qt_ver }}
+          arch: ${{ matrix.qt_arch }}
+          tools: ${{ matrix.tools }}
+          cache: true
+          modules: 'qtshadertools'
+
+      - name: Register MinGW Path
+        run: |
+          # Find the 64-bit MinGW folder inside Qt Tools
+          $toolsDir = Get-ChildItem -Path "${{ runner.workspace }}/Qt/Tools" -Filter "mingw*64*" -Directory | Select-Object -First 1
+          if ($toolsDir) {
+            $binDir = Join-Path $toolsDir.FullName "bin"
+            echo "Found MinGW at: $binDir"
+            # This adds it to the PATH for all subsequent steps
+            echo "$binDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+          } else {
+            Write-Error "Could not find MinGW directory in Qt/Tools"
+          }
+        shell: pwsh
+
+      - name: Setup Ninja
+        uses: turtlesec-no/get-ninja@main
+
+      - name: Configure CMake
+        run: >
+          cmake -B build -S . -G "Ninja"
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=gcc
+          -DCMAKE_CXX_COMPILER=g++
+          -DCMAKE_INSTALL_PREFIX="dist"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run Tests
+        working-directory: build
+        run: ctest -C Release --output-on-failure
+
+      - name: Create Deployable Artifact
+        run: cmake --install build --config Release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProcessMinimizer-Windows
+          path: dist/bin/
+          if-no-files-found: error
