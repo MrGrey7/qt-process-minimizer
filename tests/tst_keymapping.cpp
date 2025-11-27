@@ -25,7 +25,7 @@ private slots:
 
     void testModifiersIgnored() {
         // The function should strip Ctrl/Alt/Shift and return just the key
-        QCOMPARE(qtKeyToWinVK(Qt::Key_A | Qt::ControlModifier), (DWORD)'A');
+        QCOMPARE(qtKeyToWinVK(QKeyCombination(Qt::ControlModifier, Qt::Key_A).toCombined()), (DWORD)'A');
     }
 
     void testUnknownKey() {
