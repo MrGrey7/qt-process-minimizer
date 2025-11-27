@@ -19,7 +19,7 @@ set(PROJECT_SOURCES
     mainwindow.cpp mainwindow.h mainwindow.ui
     processpickerdialog.cpp processpickerdialog.h processpickerdialog.ui
     hotkeyeventfilter.cpp hotkeyeventfilter.h
-    utils.cpp utils.h   # <--- Added Utils
+    utils.cpp utils.h
     win32utils.h
     resources.qrc
 )
@@ -40,8 +40,6 @@ if(WIN32)
     )
 endif()
 
-# --- DEPLOYMENT (The Magic Part) ---
-# This generates a script that runs windeployqt when you install
 qt_generate_deploy_app_script(
     TARGET ProcessMinimizer
     OUTPUT_SCRIPT deploy_script

@@ -133,7 +133,7 @@ void MainWindow::on_apply_clicked()
 void MainWindow::createTrayIcon()
 {
     trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setIcon(QIcon(":/icon/web/icon.png")); // Replace with your icon path
+    trayIcon->setIcon(QIcon(":/icon/web/icon.png"));
     trayIcon->setToolTip("Minimizer is running");
 
     trayMenu = new QMenu(this);
@@ -173,10 +173,8 @@ struct WindowSearchContext {
 
 
 std::vector<HWND> getProcessWindows(const QStringList& processNames) {
-    // 1. Optimization: Use a Set for O(1) lookup
     std::unordered_set<DWORD> targetPids;
 
-    // 2. Optimization: Convert target names to lowercase ONCE, not every loop
     QSet<QString> targetsLower;
     for (const auto& name : processNames) targetsLower.insert(name.toLower());
 

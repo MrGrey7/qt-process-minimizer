@@ -17,7 +17,6 @@ public:
     explicit ProcessPickerDialog(QWidget *parent = nullptr);
     ~ProcessPickerDialog();
 
-    // The "Pull" accessor
     QString selectedProcess() const;
 
 private slots:
@@ -29,7 +28,6 @@ private:
     Ui::ProcessPickerDialog *ui;
     QStandardItemModel* model;
 
-    // Internal state to store selection
     QString m_selectedProcess;
 
     void populateProcessList();
